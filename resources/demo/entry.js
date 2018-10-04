@@ -1,4 +1,5 @@
-// require('jquery');
-require('./sass/common.scss');
-require('./js/index.js');
-console.log('qwe');
+require('jquery');
+require('./sass/index.scss');
+require('./sass/frameline.scss');
+
+require('./js/frameline.js');

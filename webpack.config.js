@@ -16,14 +16,15 @@ let cleanFolderInit = {
   }
 }
 
+let mainPath = './resources/demo/';
+
 module.exports = {
-  mode: 'development',
   entry: {
-    main: './resources/global/entry.js'
+    main: `${mainPath}entry.js`
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'build.js'
+    filename: 'frameline.js'
   },
   module: {
     rules: [
@@ -64,7 +65,7 @@ module.exports = {
     ),
     new CopyWebpackPlugin([
       {
-        from: './resources/global/images/',
+        from: `${mainPath}images/`,
         to: './images/',
         force: true
       }
@@ -76,9 +77,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       chunks: ['main'],
       filename: 'index.html',
-      // template: path.resolve(__dirname, `../resource/${env.lang}/${env.name}/${env.name}.pug`),
-      template: path.resolve(__dirname, './resources/global/index.html'),
-      // data: require(`../resource/${env.lang}/${env.name}/${env.name}.json`),
+      template: path.resolve(__dirname, `${mainPath}index.html`),
       inject: true
     }),
   ],
@@ -91,7 +90,7 @@ module.exports = {
     openPage: 'index.html',
     compress: true,
     watchContentBase: true,
-    contentBase: path.join(__dirname, './resources/global/'),
+    contentBase: path.join(__dirname, './resources/demo/'),
     port: 3000
   }
 };
