@@ -1,1 +1,89 @@
-//
+$mainBorderColor: rgb(226, 226, 226);
+
+$ctrHeight: 20px;
+$ctrHeightBgColor: rgba(255, 255, 255, 0.1);
+$ctrHeightBgActiveColor: rgba(68, 204, 102, 0.7);
+
+$ctrBtnWidth: 40px;
+$ctrBtnHeight: 40px;
+
+// FrameLine Style
+.frameline-container {
+  position: relative;
+  margin: 10px auto;
+  border: 10px solid $mainBorderColor;
+  border-radius: 0.5em;
+
+  .frameline-clip-group {
+    position: relative;
+
+    > img.frameline-clip {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+    }
+  }
+
+  .frameline-controller {
+    padding: 0 20px;
+    box-sizing: border-box;
+
+    .frameline-controller-bar {
+      position: relative;
+      top: 50%;
+      width: 100%;
+      height: $ctrHeight;
+      background: linear-gradient(
+        to bottom, rgba(0, 0, 0, 0.07), $ctrHeightBgColor),
+        rgb(208, 208, 208);
+
+      border-radius: 25px;
+      box-shadow: rgba(0, 0, 0, 0.5) 0px 0.08em 0.15em -0.1em inset, rgba(255, 255, 255, 0.7) 0px 0.05em 0.08em -0.01em;
+      margin: 0px auto 20px;
+
+      .frameline-bar-active,
+      .frameline-controller-button {
+        position: absolute;
+        top: 50%;
+        margin-top: -($ctrHeight / 2);
+      }
+
+      .frameline-bar-active {
+        width: 0%;
+        height: $ctrHeight;
+        border-radius: 25px;
+
+        background: linear-gradient(
+          rgba(0, 0, 0, 0.07), rgba(255, 255, 255, 0.1)),
+          $ctrHeightBgActiveColor;
+      }
+
+      .frameline-controller-button {
+        z-index: 999;
+        cursor: pointer;
+        border-radius: 50%;
+        width: $ctrBtnWidth;
+        height: $ctrBtnHeight;
+
+        padding: 15px;
+        margin-top: -37px;
+        margin-left: -35px;
+
+        transform-origin: center center;
+        
+        &:before {
+          display: block;
+          content: '';
+
+          border-radius: 50%;
+
+          width: $ctrBtnWidth;
+          height: $ctrBtnHeight;
+
+          background: linear-gradient(rgb(245, 245, 245) 10%, rgb(238, 238, 238));
+          box-shadow: rgba(255, 255, 255, 0.9) 0px 0.1em 0.15em -0.05em inset, rgba(0, 0, 0, 0.5) 0px 0.2em 0.7em -0.15em;
+        }
+      }
+    }
+  }
+}

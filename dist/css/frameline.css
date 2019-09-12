@@ -1,0 +1,52 @@
+.frameline-container {
+  position: relative;
+  margin: 10px auto;
+  border: 10px solid #e2e2e2;
+  border-radius: 0.5em; }
+  .frameline-container .frameline-clip-group {
+    position: relative; }
+    .frameline-container .frameline-clip-group > img.frameline-clip {
+      position: absolute;
+      top: 0px;
+      left: 0px; }
+  .frameline-container .frameline-controller {
+    padding: 0 20px;
+    box-sizing: border-box; }
+    .frameline-container .frameline-controller .frameline-controller-bar {
+      position: relative;
+      top: 50%;
+      width: 100%;
+      height: 20px;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.07), rgba(255, 255, 255, 0.1)), #d0d0d0;
+      border-radius: 25px;
+      box-shadow: rgba(0, 0, 0, 0.5) 0px 0.08em 0.15em -0.1em inset, rgba(255, 255, 255, 0.7) 0px 0.05em 0.08em -0.01em;
+      margin: 0px auto 20px; }
+      .frameline-container .frameline-controller .frameline-controller-bar .frameline-bar-active,
+      .frameline-container .frameline-controller .frameline-controller-bar .frameline-controller-button {
+        position: absolute;
+        top: 50%;
+        margin-top: -10px; }
+      .frameline-container .frameline-controller .frameline-controller-bar .frameline-bar-active {
+        width: 0%;
+        height: 20px;
+        border-radius: 25px;
+        background: linear-gradient(rgba(0, 0, 0, 0.07), rgba(255, 255, 255, 0.1)), rgba(68, 204, 102, 0.7); }
+      .frameline-container .frameline-controller .frameline-controller-bar .frameline-controller-button {
+        z-index: 999;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        padding: 15px;
+        margin-top: -37px;
+        margin-left: -35px;
+        transform-origin: center center; }
+        .frameline-container .frameline-controller .frameline-controller-bar .frameline-controller-button:before {
+          display: block;
+          content: '';
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          background: linear-gradient(whitesmoke 10%, #eeeeee);
+          box-shadow: rgba(255, 255, 255, 0.9) 0px 0.1em 0.15em -0.05em inset, rgba(0, 0, 0, 0.5) 0px 0.2em 0.7em -0.15em; }
+

@@ -3,9 +3,13 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const WebpackShellPlugin = require('webpack-shell-plugin');
-const MergeIntoSingleFilePlugin = require('webpack-merge-and-include-globally');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserJSPlugin = require('terser-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+
+let initProject = {
+  openPage: 'index',
+  pages: ['frameline']
+};
 
 let cleanFolderInit = {
   target: [
@@ -17,12 +21,14 @@ let cleanFolderInit = {
     verbose: true
     // exclude: ['*.html']
   }
-};
+}
 
-let baseCommonTask = {
+let baseConfig = {
+  //載入檔案入口
   entry: {
-    vendor: './resources/entry.js'
+    [`${initProject.pages[0]}`]: path.resolve(__dirname, './resources/entry.js'),
   },
+  //打包輸出
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'js/[name].js'
@@ -43,28 +49,37 @@ let baseCommonTask = {
         //Babel-Loader
         test: /\.m?js$/,
         exclude: /(node_modules|bower_components)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env'],
-            plugins: [require('@babel/plugin-proposal-object-rest-spread')]
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-env'],
+              plugins: [
+                '@babel/plugin-proposal-object-rest-spread',
+                '@babel/plugin-transform-runtime'
+              ]
+            }
           }
-        }
+        ]
       },
       {
         // Sass-loader + css-loader
         test: /\.(sa|sc|c)ss$/,
         use: [
+     
           MiniCssExtractPlugin.loader,
-          'css-loader',
+          { 
+            loader: 'css-loader',
+            options: { 
+              url: false 
+            } 
+          },
           'sass-loader'
         ]
       }
     ]
   },
-  optimization:{
-    minimizer: [new UglifyJsPlugin()]
-  },
+  //額外外掛功能
   plugins: [
     new CleanWebpackPlugin(
       cleanFolderInit.target,
@@ -78,46 +93,44 @@ let baseCommonTask = {
       }
     ]),
     new MiniCssExtractPlugin({
-      filename: '/css/[name].css',
+      filename: 'css/frameline.css',
       chunkFilename: '[id].css'
     }),
-    new HtmlWebpackPlugin({
-      chunks: ['vendor'],
-      filename: 'demo.html',
-      template: path.resolve(__dirname, './resources/demo.html'),
-      inject: true
-    })
   ],
   devServer: {
     overlay: {
       warnings: true,
       errors: true
     },
+    historyApiFallback: true,
+    writeToDisk: true,
     open: true,
-    openPage: 'demo.html',
+    openPage: `./${initProject.openPage}.html`,
     compress: true,
     watchContentBase: true,
     contentBase: path.join(__dirname, './resources/'),
     port: 3000
   }
-};
+}
+
+//Multiple Pages Build.
+initProject.pages.map(function(proName) {
+  baseConfig.plugins.push(
+    new HtmlWebpackPlugin({
+      chunks: [`${proName}`],
+      template: path.resolve(__dirname, './resources/index.html'),
+      filename: './demo.html',
+      inject: false
+    })
+  );
+});
 
 module.exports = (env, argv) => {
-  //When Build-mode Active
   if (argv.mode === 'production') {
-    baseCommonTask.plugins.push(
-      new MergeIntoSingleFilePlugin({
-        files: {
-          'src/frameline.js': [
-            'resources/js/frameline.js'
-          ]
-        }
-      }),
-      new WebpackShellPlugin({
-        onBuildStart: ['echo Start Create Plugins!!'],
-        onBuildEnd: ['./pluginBuild.sh']
-      })
-    );
+    baseConfig.optimization = {
+      minimizer: [new TerserJSPlugin({}), new OptimizeCSSAssetsPlugin({})]
+    }
   }
-  return baseCommonTask;
-};
+
+  return baseConfig;
+}

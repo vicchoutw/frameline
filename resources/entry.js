@@ -1,2 +1,7 @@
 require('./sass/frameline.scss');
-require('./js/frameline.js');
+
+const FrameLine = require('./js/frameline.js');
+
+new FrameLine();
+
+
