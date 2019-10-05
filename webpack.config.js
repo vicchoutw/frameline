@@ -1,18 +1,21 @@
-//套件加載
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const TerserJSPlugin = require('terser-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
-//設定CleanWebpackPlugin參數
+let initProject = {
+  openPage: 'index',
+  pages: ['frameline']
+};
+
 let cleanFolderInit = {
-  //清除目錄名稱
   target: [
     'build',
     'dist'
   ],
-  //配置選項
   options: {
     root: path.resolve('./'),
     verbose: true
@@ -20,20 +23,17 @@ let cleanFolderInit = {
   }
 }
 
-module.exports = {
-  // Webpack模式，目前設定為development
-  mode: 'development',
-  // 流程入口位置
+let baseConfig = {
+  //載入檔案入口
   entry: {
-    main: './resources/global/entry.js'
+    [`${initProject.pages[0]}`]: path.resolve(__dirname, './resources/entry.js'),
   },
-  // 輸出位置，filename定義輸出的js檔名
+  //打包輸出
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'js/bundle.js'
+    filename: 'js/[name].js'
   },
   module: {
-    //設定每個Loader配置
     rules: [
       {
         //Eslint-Loader
@@ -49,74 +49,88 @@ module.exports = {
         //Babel-Loader
         test: /\.m?js$/,
         exclude: /(node_modules|bower_components)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env'],
-            plugins: [require('@babel/plugin-proposal-object-rest-spread')]
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-env'],
+              plugins: [
+                '@babel/plugin-proposal-object-rest-spread',
+                '@babel/plugin-transform-runtime'
+              ]
+            }
           }
-        }
+        ]
       },
       {
         // Sass-loader + css-loader
         test: /\.(sa|sc|c)ss$/,
         use: [
+     
           MiniCssExtractPlugin.loader,
-          'css-loader',
+          { 
+            loader: 'css-loader',
+            options: { 
+              url: false 
+            } 
+          },
           'sass-loader'
         ]
       }
     ]
   },
-  //設定每個Plugins配置
+  //額外外掛功能
   plugins: [
-    //每次webpack bundle前先行移除資料夾
     new CleanWebpackPlugin(
       cleanFolderInit.target,
       cleanFolderInit.options
     ),
-    //每次webpack bundle前先行複製or移動資料夾
     new CopyWebpackPlugin([
       {
-        from: './resources/global/images/',
+        from: './resources/images/',
         to: './images/',
-        //是否強制覆蓋
         force: true
       }
     ]),
-    //打包Sass檔案，並透過Sass / Css loader最後輸出成css檔
     new MiniCssExtractPlugin({
-      filename: '/css/[name].css',
+      filename: 'css/frameline.css',
       chunkFilename: '[id].css'
     }),
-    //自動加載css / js檔案並重新建置html檔案
-    new HtmlWebpackPlugin({
-      chunks: ['main'],
-      filename: 'index.html',
-      // template: path.resolve(__dirname, `../resource/${env.lang}/${env.name}/${env.name}.pug`),
-      template: path.resolve(__dirname, './resources/global/index.html'),
-      // data: require(`../resource/${env.lang}/${env.name}/${env.name}.json`),
-      inject: true
-    })
   ],
-  //localHost server配置
   devServer: {
-    //顯示警告or錯誤訊息
     overlay: {
       warnings: true,
       errors: true
     },
-    //每次bundle結束後自動開啟頁面
+    historyApiFallback: true,
+    writeToDisk: true,
     open: true,
-    //開啟的頁面名稱
-    openPage: 'index.html',
+    openPage: `./${initProject.openPage}.html`,
     compress: true,
-    //是否持續監聽指定目錄下所有檔案異動
     watchContentBase: true,
-    //監聽指定目錄名稱
-    contentBase: path.join(__dirname, './resources/global/'),
-    //填入正確IP位置
-    // host: '192.168.1.123',
+    contentBase: path.join(__dirname, './resources/'),
     port: 3000
   }
+}
+
+//Multiple Pages Build.
+initProject.pages.map(function(proName) {
+  baseConfig.plugins.push(
+    new HtmlWebpackPlugin({
+      chunks: [`${proName}`],
+      template: path.resolve(__dirname, './resources/index.html'),
+      filename: './demo.html',
+      inject: false
+    })
+  );
+});
+
+module.exports = (env, argv) => {
+  if (argv.mode === 'production') {
+    baseConfig.optimization = {
+      minimizer: [new TerserJSPlugin({}), new OptimizeCSSAssetsPlugin({})]
+    }
+  }
+
+  return baseConfig;
 }

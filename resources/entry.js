@@ -1,9 +1,7 @@
-require('jquery');
-require('./sass/common.scss');
-require('./js/index.js');
-console.log('test Entry.js!!');
+require('./sass/frameline.scss');
 
-function testFunc() {
-  console.log('This is a TEST');
-}
-testFunc();
+const FrameLine = require('./js/frameline.js');
+
+new FrameLine();
+
+

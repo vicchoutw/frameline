@@ -1,126 +1,212 @@
-const frameLine = (_config) => {
-  const flGallery = document.getElementsByClassName('frameline')[0];
-  flGallery.className = flGallery.className + ' frameline-js';
+const frameLine = (cfg) => {
+  'use strict';
 
-  //Default JS-Configs
   let _default = {
-    width: flGallery.style.width,
-    height: flGallery.style.height,
-    reserved: true,
-    barColor: '#000000',
-    barPos: 'top'
+    element: '.frameline',
+    index: 0,
+    reverse: false,
+    controller: true,
+    startImgIndex: 0,
+    lineBgColor: '#000'
   };
 
-  //Images Source Data-arguments
-  let sourceConfig = {
-    startIndex: Number(flGallery.getAttribute('data-start')),
-    endIndex: Number(flGallery.getAttribute('data-end')),
-    srcPath: flGallery.getAttribute('data-src'),
-    srcType: flGallery.getAttribute('data-type')
-  };
-
-  let newConfig = Object.assign({}, _default, _config);
-  console.log(newConfig, sourceConfig);
-
-  const progressBlock = document.createElement('div');
-  const progressBar = document.createElement('div');
-  const progressBtn = document.createElement('button');
-
-  let imgClip;
-  let imgClipIndex = sourceConfig.startIndex;
-  let allImgClips;
-  let totalIndex = (sourceConfig.endIndex - sourceConfig.startIndex) + 1;
-
-  const createFrameLineElements = () => {
-    function createImgClips() {
-      for(let i = 0; i < totalIndex; i = i + 1) {
-        imgClip = document.createElement('img');
-        imgClip.src = `${sourceConfig.srcPath}${imgClipIndex}.${sourceConfig.srcType}`;
-        flGallery.appendChild(imgClip);
-        imgClipIndex = imgClipIndex + 1;
-      }
-    }
-    function createProgressBar() {
-      flGallery.appendChild(progressBlock);
-      progressBlock.className = 'frameline-progress';
-      progressBlock.appendChild(progressBar);
-      progressBar.className = 'frameline-bar';
-      progressBlock.appendChild(progressBtn);
-      progressBtn.className = 'frameline-button';
-    }
-    // let allImgClips = flGallery.getElementsByTagName('img');
-    createImgClips();
-    createProgressBar();
-  };
-
-  allImgClips = flGallery.querySelectorAll('img');
-
-  function changeImageClip(index) {
-    allImgClips.style.opacity = 0;
-
-    if (index > totalIndex) {
-      index = 1;
-    } else if (index <= 1) {
-      index = 1;
-    }
+  if (cfg) {
+    _default = Object.assign(cfg, _default);
   }
 
-  createFrameLineElements();
 
-  const progressBarOnDrag = () => {
-    let newX;
-    let clipIndex = 1;
-    let draggableOn = false;
-    let pbOffsetX = progressBtn.offset().left;
-    let ratio = Math.round(flGallery.style.width / totalIndex);
+  let globalConfig = {
+    clips: {
+      width: null,
+      height: null,
+      length: null
+    },
+    controller: {
+      width: 930,
+      height: 20,
+      bgColor: '#a7a7a7',
+      currPercent: 0,
+      currClipIndex: 0
+    }
+  };
 
-    console.log('Ratio: ', ratio);
-    console.log('pbOffsetX', pbOffsetX);
+  let currentClipElement;
 
-    function changeBarStatus(index) {
-      index = Math.round(newX / ratio);
-      progressBtn.style.transform = `translateX(${newX}px) translateZ(0)`;
-      console.log('clipIndex: ', index);
+  // let windows = document.defaultView;
+  // console.log('window: ', windows);
+
+  const frameElement = document.querySelector(_default.element);
+  const newFrameClipGroup = document.createElement('div');
+  const newFrameController = document.createElement('div');
+  const newControllerBar = document.createElement('div');
+  const newControllerBarActive = document.createElement('div');
+  const newControllerButton = document.createElement('div');
+
+
+  frameElement.classList.add('frameline-container');
+
+  frameElement.style.cssText = `
+    width: 960px;
+  `;
+
+  let frameElementChild = frameElement.children;
+  let totalClip = frameElement.children.length;
+
+  globalConfig.clips.length = totalClip;
+
+  console.log('Get FrameLiner <div>', frameElement);
+  console.log('Get FrameLiner <img>', totalClip);
+
+
+  // Append Base Elements
+  const initFrameLineElement = (mainContent, clipGroup, clipImg, controller, controllerBar, controllerBarActive, controllerButton) => {
+
+    function _eachImgAddClassName() {
+      for (let i = 0; i < totalClip; i = i + 1) {
+
+        if (i === 0) {
+          globalConfig.clips.width = clipImg[i].clientWidth;
+          globalConfig.clips.height = clipImg[i].clientHeight;
+        }
+
+        clipImg[i].classList.add('frameline-clip', `clip-${i}`);
+        clipImg[i].style.cssText = `
+          width: 960px;
+          height: 540px;
+        `;
+      }
     }
 
+
+    function _appendParentElementForAllImg() {
+      clipGroup.classList.add('frameline-clip-group');
+      while (frameElement.hasChildNodes()) {
+        clipGroup.appendChild(mainContent.firstChild);
+      }
+      mainContent.appendChild(clipGroup);
+
+      // controller style
+      clipGroup.style.cssText = `
+        width: 960px;
+        height: 540px;
+      `;
+    }
+
+    _eachImgAddClassName();
+    _appendParentElementForAllImg();
+
+
+    if (!_default.controller) { return; }
+
+
+    function _appendControllerInterface() {
+      controller.classList.add('frameline-controller');
+      controllerBar.classList.add('frameline-controller-bar');
+      controllerBarActive.classList.add('frameline-bar-active');
+      controllerButton.classList.add('frameline-controller-button');
+
+      mainContent.appendChild(controller);
+      controllerBar.appendChild(controllerBarActive);
+      controllerBar.appendChild(controllerButton);
+
+      controller.appendChild(controllerBar);
+
+      globalConfig.clips.width = controller.clientWidth;
+
+      // controller bar style
+      controllerBarActive.style.cssText = `
+        width: ${globalConfig.controller.currPercent}%;
+      `;
+      // `;
+    }
+
+    _appendControllerInterface();
+  };
+
+
+  const frameClipExchange = (eachImgClip, currIndex) => {
+
+    for (let i = 0; i < eachImgClip.length; i = i + 1) {
+      eachImgClip[i].style.opacity = 0;
+    }
+
+    if (currIndex >= globalConfig.clips.length) {
+      currIndex = globalConfig.clips.length;
+    } else if (currIndex <= 1) {
+      currIndex = 1;
+    }
+
+    currentClipElement = document.querySelector(`.clip-${currIndex}`);
+    currentClipElement.style.opacity = 1;
+  };
+
+  const handleFrameLineInterAction = (mainContent, controllerBar, controllerBarActive, dragButton) => {
+    let newX;
+    let isDraggable = false;
+
+    let defaultOffsetX = mainContent.offsetLeft + controllerBar.offsetLeft;
+
+    let ratio = Math.round(globalConfig.controller.width / globalConfig.clips.length);
+
     //Draggable Switch On
-    progressBtn.addEventListener('mousedown', function () {
-      draggableOn = true;
-    });
+    function _onMouseDown() {
+      // console.log('Mouse Down!!');
+      isDraggable = true;
+    }
 
     //Draggable Switch Off
-    window.document.addEventListener('mouseup', function () {
-      draggableOn = false;
-    });
+    function _onMouseUpOut() {
+      // console.log('Mouse Up!!');
+      isDraggable = false;
+    }
 
-    //Dragging Button
-    window.document.addEventListener('mousemove', function (event) {
-      if (!draggableOn) {return;}
-      newX = event.clientX - pbOffsetX;
-      if (newX > flGallery.style.width) {
-        newX = flGallery.style.width;
+    function _onMouseMove(e) {
+      // console.log('Mouse Dragging!!');
+      if (!isDraggable) { return; }
+      console.log('Ratio: ', ratio);
+
+      // e.preventDefault();
+      newX = e.pageX - defaultOffsetX;
+      // console.log('Mouse Dragging: ', event.pageX, newX);
+      if (newX >= globalConfig.controller.width - 20) {
+        newX = globalConfig.controller.width - 20;
+      } else if (newX <= 10) {
+        newX = 10;
       }
-      changeBarStatus(clipIndex);
-      // console.log('clipIndex: ', clipIndex);
-      // progressBtn.css('transform', 'translateX(0'+ newX +'px) translateZ(0)');
-      changeImageClip(clipIndex);
-    });
 
-    // $window.mousemove(function (e) {
-    //   if (!draggableOn) {return;}
-    //   newX = e.clientX - pbOffsetX;
-    //   // console.log('moveX: ', newX);
-    //   if (newX > maxBarLength) {
-    //     newX = maxBarLength;
-    //   }
-    //   clipIndex = Math.round(newX / ratio);
-    //   // console.log('clipIndex: ', clipIndex);
+      globalConfig.controller.currClipIndex = Math.round(newX / ratio);
 
-    //   progressBarBtn.css('transform', 'translateX(0'+ newX +'px) translateZ(0)');
-    //   changeImgClip(clipIndex);
-    // });
+      console.log('currClipIndex: ', globalConfig.controller.currClipIndex);
+
+      dragButton.style.transform = `translate3d(${newX}px, 0px, 0px) translateZ(0px)`;
+      controllerBarActive.style.width = `${newX}px`;
+
+      frameClipExchange(newFrameClipGroup.children, globalConfig.controller.currClipIndex);
+    }
+
+    dragButton.addEventListener('mousedown', _onMouseDown);
+    window.addEventListener('mouseup', _onMouseUpOut);
+    // dragButton.addEventListener('mouseleave', _onMouseUpOut);
+    window.addEventListener('mousemove', _onMouseMove);
+    //Dragging Button
   };
-  progressBarOnDrag();
+
+  initFrameLineElement(
+    frameElement,
+    newFrameClipGroup,
+    frameElementChild,
+    newFrameController,
+    newControllerBar,
+    newControllerBarActive,
+    newControllerButton
+  );
+
+  handleFrameLineInterAction(
+    frameElement,
+    newControllerBar,
+    newControllerBarActive,
+    newControllerButton
+  );
 };
 
-frameLine();
+module.exports = frameLine;
